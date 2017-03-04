@@ -10,18 +10,15 @@ const config = {
 const fbApp = firebase.initializeApp(config);
 const db = fbApp.database();
 
-function insertCourseData(sourceSchool, data) {
-  const url = 'https://grasp-f7f86.firebaseio.com/';
-
-  // const key = firebase.database().ref().child('course').push().key;
-
-  // const updates = {};
-  // updates['/posts/' + newPostKey] = postData;
-  // updates['/user-posts/' + uid + '/' + newPostKey] = postData;
-
+function insertSchoolCourseData(sourceSchool, data) {
   return firebase.database().ref().child(`course/${sourceSchool}`).update(data);
 }
 
+function insertCourseData(sourceSchool, courseCategory, courseCode, data) {
+  return firebase.database().ref().child(`course/${sourceSchool}/${courseCategory}/${courseCode}`).update(data);
+}
+
 module.exports = {
+  insertSchoolCourseData,
   insertCourseData,
 };

@@ -11,7 +11,6 @@ function getSentiment(content, fields, type) {
   (fields === undefined) && (fields = 'documentSentiment,sentences');
   (type === undefined) && (type = 'PLAIN_TEXT');
 
-  console.log(content);
   const apiUrl = url + qs.stringify({
     key: config.googleApiKey,
     fields,
@@ -27,7 +26,8 @@ function getSentiment(content, fields, type) {
         type,
       }
     }),
-  });
+  })
+    .then(res => res.json());
 }
 
 module.exports = {

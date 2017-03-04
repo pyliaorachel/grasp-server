@@ -7,8 +7,8 @@ const config = require('./config');
 
 const url = 'https://translation.googleapis.com/language/translate/v2?';
 
-function getTranslation(q, target) {
-  (target === undefined) && (target = 'en');
+function getTranslation(q) {
+  const target = 'en';
 
   const apiUrl = url + qs.stringify({
     key: config.googleApiKey,
@@ -17,7 +17,9 @@ function getTranslation(q, target) {
   });
   return fetch(apiUrl, {
     method: 'GET',
-  });
+  })
+    .then(res => res.json())
+    .catch(err => console.log(err));
 }
 
 module.exports = {
