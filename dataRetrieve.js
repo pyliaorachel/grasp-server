@@ -8,27 +8,25 @@ const db = require('./db');
 const translationApi = require('./translationApi');
 const sentimentApi = require('./sentimentApi');
 
-let allData = null;
-
 const sources = {
   hku: {    
     cc: {
-      // mainlandCCData: {
-      //   urls: [
-      //     'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/2/public/values?alt=json',
-      //     'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/3/public/values?alt=json',
-      //     'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/4/public/values?alt=json',
-      //     'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/5/public/values?alt=json',
-      //   ],
-      //   titleField: 'gsx$coursetitle',
-      //   codeField: 'title',
-      // },
+      mainlandCCData: {
+        urls: [
+          // 'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/2/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/3/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/4/public/values?alt=json',
+          'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/5/public/values?alt=json',
+        ],
+        titleField: 'gsx$coursetitle',
+        codeField: 'title',
+      },
       taiwanCCData: {
         urls: [
-          // 'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/4/public/values?alt=json',
+          'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/4/public/values?alt=json',
           // 'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/5/public/values?alt=json',
           // 'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/6/public/values?alt=json',
-          'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/7/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/7/public/values?alt=json',
         ],
         titleField: 'gsx$coursename',
         codeField: 'title',
@@ -39,7 +37,6 @@ const sources = {
 
 function parseData(courseCategory, entries, titleField, codeField) {
   let courses = {};
-  let fetches = [];
 
   entries.forEach((entry) => {
     const courseCode = entry[codeField] && entry[codeField]['$t'];
@@ -56,50 +53,36 @@ function parseData(courseCategory, entries, titleField, codeField) {
 
       Object.keys(entry).slice(indexOfCourseTitle+1).forEach((key) => {
         const comment = entry[key]['$t'];
+        comments.push(comment);
 
-        fetches.push(translationApi.getTranslation(comment)
-          .then(res => res.json())
-          .then(res => {
-            if (res.data) {
-              /*
-                { translations:
-                    [ { translatedText: '...',
-                    detectedSourceLanguage: 'zh-TW' } ] }
-              */
-              const translatedText = res.data.translations[0].translatedText;
-              const lang = res.data.translations[0].detectedSourceLanguage;
+        // fetches.push(translationApi.getTranslation(comment)
+        //   .then(res => res.json())
+        //   .then(res => {
+        //     if (res.data) {
+        //       const translatedText = res.data.translations[0].translatedText;
+        //       const lang = res.data.translations[0].detectedSourceLanguage;
 
-              comments.push({
-                text: comment,
-                lang,
-              });
+        //       comments.push({
+        //         text: comment,
+        //         lang,
+        //       });
 
-              sentimentApi.getSentiment(translatedText)
-                .then(res => res.json())
-                .then(res => {
-                  /* 
-                    { documentSentiment: { magnitude: 2.1, score: 0 },
-                      sentences:
-                      [ { text: [Object], sentiment: [Object] },
-                        ...] }
-                  */
-                  magnitude += res.documentSentiment.magnitude;
-                  score += res.documentSentiment.score;
-                })
-                .catch(err => console.log(err));
-            }
-          })
-          .catch(err => console.log(err)));
+        //       return sentimentApi.getSentiment(translatedText)
+        //         .then(res => res.json())
+        //         .then(res => {
+        //           magnitude += res.documentSentiment.magnitude;
+        //           score += res.documentSentiment.score;
+        //         })
+        //         .catch(err => console.log(err));
+        //     }
+        //   })
+        //   .catch(err => console.log(err)));
       });
 
-      Promise.all(fetches).then(() => {
-        courses[courseCode] = {
-          title: courseTitle,
-          comments,
-          score: [score],
-          magnitude: [magnitude],
-        };
-      });
+      courses[courseCode] = {
+        title: courseTitle,
+        comments,
+      };
     }
   });
 
@@ -111,12 +94,8 @@ function parseData(courseCategory, entries, titleField, codeField) {
   return data;
 }
 
-function mergeData(data) {
-  if (allData) {
-    allData = merge(allData, data);
-  } else {
-    allData = data;
-  }
+function mergeData(data1, data2) {
+  return merge(data1, data2);
 }
 
 function getData(sourceSchool, courseType) {
@@ -130,7 +109,7 @@ function getData(sourceSchool, courseType) {
       const codeField = targetInfos[info].codeField;
 
       urlArray.forEach((url) => {
-        fetches.push(new Promise((resolve, reject) => {
+        fetches.push(
           fetch(url, {
             method: 'get',
           }).then((res) => res.json())
@@ -138,18 +117,19 @@ function getData(sourceSchool, courseType) {
               const courseCategory = res.feed.title['$t'];
               const entries = res.feed.entry;
               
-              resolve(parseData(courseCategory, entries, titleField, codeField));
+              return parseData(courseCategory, entries, titleField, codeField);
             })
-            .catch((err) => console.log(err));
-        }));
+            .catch((err) => console.log(err))
+        );
       });
     });
 
     Promise.all(fetches).then((dataArray) => {
-      console.log('all', dataArray);
-      // mergeData(data);
-      // db.insertCourseData(sourceSchool, allData)
-      //   .catch((err) => console.log(err));
+      const allData = dataArray.reduce((prevData, curData) => {
+        return mergeData(prevData, curData);
+      });
+      db.insertCourseData(sourceSchool, allData)
+        .catch((err) => console.log(err));
     });    
   } else {
     return null;
