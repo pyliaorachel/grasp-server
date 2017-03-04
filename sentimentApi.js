@@ -1,3 +1,5 @@
+'use strict';
+
 const fetch = require('node-fetch');
 
 const qs = require('qs');
@@ -9,6 +11,7 @@ function getSentiment(content, fields, type) {
   (fields === undefined) && (fields = 'documentSentiment,sentences');
   (type === undefined) && (type = 'PLAIN_TEXT');
 
+  console.log(content);
   const apiUrl = url + qs.stringify({
     key: config.googleApiKey,
     fields,
