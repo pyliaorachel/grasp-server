@@ -137,15 +137,55 @@ function updateSentimentData(sourceSchool, courseCategory, courseCode, data) {
         }))
           .then((sentimentData) => {
             if (sentimentData) {
+
               const sentimentStatistics = sentimentData.reduce((prevSum, curData) => {
                 prevSum.score += curData.documentSentiment.score;
                 prevSum.magnitude += curData.documentSentiment.magnitude;
+
+                const sentences = curData.sentences;
+                sentences.forEach((sentence) => {
+                  const text = sentence.text.content.toLowerCase();
+                  if (text.indexOf('professor') != -1 || text.indexOf('teacher') != -1) {
+                    prevSum.professor.count++;
+                    prevSum.professor.score += sentence.sentiment.score;
+                    prevSum.professor.magnitude += sentence.sentiment.magnitude;
+                  }
+                  if (text.indexOf('workload') != -1) {
+                    prevSum.workload.count++;
+                    prevSum.workload.score += sentence.sentiment.score;
+                    prevSum.workload.magnitude += sentence.sentiment.magnitude;
+                  }
+                  if (text.indexOf('grade') != -1) {
+                    prevSum.grade.count++;
+                    prevSum.grade.score += sentence.sentiment.score;
+                    prevSum.grade.magnitude += sentence.sentiment.magnitude;
+                  }     
+                });
+
                 return prevSum;
-              }, { score: 0, magnitude: 0 });
+              }, { 
+                score: 0, 
+                magnitude: 0, 
+                professor: { score: 0, magnitude: 0, count: 0 },
+                workload: { score: 0, magnitude: 0, count: 0 },
+                grade: { score: 0, magnitude: 0, count: 0 },
+              });
 
               const numOfComments = comments.length;
               sentimentStatistics.score = parseFloat(sentimentStatistics.score) / numOfComments;
               sentimentStatistics.magnitude = parseFloat(sentimentStatistics.magnitude) / numOfComments;
+              if (sentimentStatistics.professor.count) {
+                sentimentStatistics.professor.score = parseFloat(sentimentStatistics.professor.score) / sentimentStatistics.professor.count;
+                sentimentStatistics.professor.magnitude = parseFloat(sentimentStatistics.professor.magnitude) / sentimentStatistics.professor.count;
+              }
+              if (sentimentStatistics.workload.count) {
+                sentimentStatistics.workload.score = parseFloat(sentimentStatistics.workload.score) / sentimentStatistics.workload.count;
+                sentimentStatistics.workload.magnitude = parseFloat(sentimentStatistics.workload.magnitude) / sentimentStatistics.workload.count;
+              }
+              if (sentimentStatistics.grade.count) {
+                sentimentStatistics.grade.score = parseFloat(sentimentStatistics.grade.score) / sentimentStatistics.grade.count;
+                sentimentStatistics.grade.magnitude = parseFloat(sentimentStatistics.grade.magnitude) / sentimentStatistics.grade.count;
+              }
             
               db.insertCourseData(sourceSchool, courseCategory, courseCode, {
                 sentimentStatistics,
