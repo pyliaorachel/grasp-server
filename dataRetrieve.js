@@ -14,18 +14,18 @@ const sources = {
       mainlandCCData: {
         urls: [
           'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/2/public/values?alt=json',
-          'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/3/public/values?alt=json',
-          'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/4/public/values?alt=json',
-          'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/5/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/3/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/4/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1syT_lw98qsCk9T_jvJWSCerpKGXdBpeD55sRXSJJroA/5/public/values?alt=json',
         ],
         titleField: 'gsx$coursetitle',
         codeField: 'title',
       },
       taiwanCCData: {
         urls: [
-          'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/4/public/values?alt=json',
-          'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/5/public/values?alt=json',
-          'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/6/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/4/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/5/public/values?alt=json',
+          // 'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/6/public/values?alt=json',
           'https://spreadsheets.google.com/feeds/list/1wiiuuI68-cu2mk_wmnl0KoDro0B0bt75Bwl3auBquAc/7/public/values?alt=json',
         ],
         titleField: 'gsx$coursename',
@@ -138,9 +138,11 @@ function updateSentimentData(sourceSchool, courseCategory, courseCode, data) {
           .then((sentimentData) => {
             if (sentimentData) {
 
-              const sentimentStatistics = sentimentData.reduce((prevSum, curData) => {
+              const sentimentStatistics = sentimentData.reduce((prevSum, curData, i) => {
                 prevSum.score += curData.documentSentiment.score;
                 prevSum.magnitude += curData.documentSentiment.magnitude;
+
+                comments[i]['sentiment'] = curData.documentSentiment;
 
                 const sentences = curData.sentences;
                 sentences.forEach((sentence) => {
